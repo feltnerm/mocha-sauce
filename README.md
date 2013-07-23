@@ -87,8 +87,8 @@ var sauce = new MochaSauce({
 	host: "localhost", // or http://ondemand.sauce.com if not using Sauce Connect
 	port: 4445, // 80
 
-	// the test url
-	url: "http://localhost/test" // point to the site running your mocha tests
+	// the test urls
+	urls: ["http://localhost/test"] // point to the site running your mocha tests
 });
 
 
@@ -134,7 +134,7 @@ Save this file somewhere, call it however you want. I'll choose `runner.js`.
    - `accessKey` (required) *your Sauce Labs Access Key*
    - `host` *the host the Sauce service runs on (if using Sauce Connect, this is localhost)*
    - `port` *the port the Sauce service runs on (if using Sauce Connect, this is 4445)*
-   - `url` *url pointing to the site running your tests*
+   - `urls` *an array of urls pointing to the site(s) running your tests*
    - `build` *an identifier for the build*
    - `tags` *an optional array of tags*
    
@@ -153,6 +153,7 @@ Save this file somewhere, call it however you want. I'll choose `runner.js`.
 - `MochaSauce.build(build)` - *Set the build string. Can also be done during instantiation.*
 - `MochaSauce.tags(tags)` - *Set the tags (array of strings). Can also be done during instantiation.*
 - `MochaSauce.url(url)` - *Set the url pointing to the site that runs the mocha tests. Can also be done during instantiation.*
+- `MochaSauce.urls(urls)` - *Set the urls pointing to the site(s) that run the mocha tests. Can also be done during instantiation.*
 - `MochaSauce.concurrency(num)` - *Limit the number of concurrent VMs to the number given. Very useful, as some of Sauce Labs' plans don't allow you to execute an unlimited amount of VMs at the same time.*
 - `MochaSauce.record(video, screenshots?)` - *Disable or enable the recording of video and screenshots at Sauce Labs. By default they are disabled to make tests through Sauce execute faster, but if you have a lot of visual activity in your unit tests (or want to debug why your test site isn't loading through the VMs), enable these.*
 
@@ -203,7 +204,7 @@ var sauce = new MochaSauce({
 	name: "project",
 
 	// the test url
-	url: "http://localhost/test",
+	urls: ["http://localhost/test"],
 
 	// the current build name (optional)
 	build: Date.now()
