@@ -25,7 +25,7 @@ function MochaSauce(conf) {
 	this.browsers = [];
 
 	this._url = conf.url || '';
-	this._concurrency = 2;
+	this._concurrency = conf.concurrency || 2;
 	this.tags = conf.tags || [];
 	this.build = conf.build || '';
 	this._video = false;
@@ -73,7 +73,7 @@ MochaSauce.prototype.browser = function(conf) {
 	this.browsers.push(conf);
 };
 
-MochaSauce.prototype.start = function(fn) {
+MochaSauce.prototype.start = function(test, fn) {
 
 	var self = this;
 	var batch = new Batch();
@@ -106,56 +106,62 @@ MochaSauce.prototype.start = function(fn) {
 				browser.get(self._url, function(err) {
 					if (err) return done(err);
 
-					// wait until choco is ready
-					function doItAgain() {
+                    // wait until choco is ready
+                    function doItAgain() {
 
-						browser.eval('window.chocoReady', function(err, res) {
+                        browser.eval('window.chocoReady', function(err, res) {
 
-							if(res !== true) {
-								setTimeout(function() {
-									doItAgain();
-								}, 1000);
-								return;
-							}
+                            if(res !== true) {
+                                setTimeout(function() {
+                                    doItAgain();
+                                }, 1000);
+                                return;
+                            }
 
-							if (err) return done(err);
+                            if (err) return done(err);
 
-							browser.eval('JSON.stringify(window.mochaResults)', function(err, res) {
-								if (err) return done(err);
+                            browser.eval('JSON.stringify(window.mochaResults)', function(err, res) {
+                                if (err) return done(err);
 
-								// convert stringified object back to parsed
-								res = JSON.parse(res);
+                                // convert stringified object back to parsed
+                                res = JSON.parse(res);
 
-								// add browser conf to be able to identify in the end callback
-								res.browser = conf;
+                                // add browser conf to be able to identify in the end callback
+                                res.browser = conf;
 
-								debug('results %j', res);
+                                debug('results %j', res);
 
-								// update Sauce Labs with custom test data
-								var data = {
-									'custom-data': { mocha: res.jsonReport },
-									'passed': !res.failures
-								};
+                                // update Sauce Labs with custom test data
+                                var data = {
+                                    'custom-data': { mocha: res.jsonReport },
+                                    'passed': !res.failures
+                                };
 
-								request({
-									method: "PUT",
-									uri: ["https://", self.user, ":", self.key, "@saucelabs.com/rest", "/v1/", self.user, "/jobs/", browser.sessionID].join(''),
-									headers: {'Content-Type': 'application/json'},
-									body: JSON.stringify(data)
-								}, function (/*error, response, body*/) {
+                                request({
+                                    method: "PUT",
+                                    uri: ["https://", self.user, ":", self.key, "@saucelabs.com/rest", "/v1/", self.user, "/jobs/", browser.sessionID].join(''),
+                                    headers: {'Content-Type': 'application/json'},
+                                    body: JSON.stringify(data)
+                                }, function (/*error, response, body*/) {
 
-									self.emit('end', conf, res);
-									browser.quit();
-									done(null, res);
+                                    self.emit('end', conf, res);
+                                    browser.quit();
+                                    done(null, res);
+                                });
 
-								});
+                            });
 
-							});
+                        });
+                    }
 
-						});
-					}
+                    if (test && typeof test === 'function') {
+                        test(browser, function (err) {
+                            if (err) { done(err); }
+                            doItAgain();
+                        });
+                    }
 
-					doItAgain();
+                    doItAgain()
 
 				});
 			});
